@@ -9,6 +9,7 @@ type TabType = 'bid' | 'result' | 'win'; // Changed 'contract' to 'win'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('bid'); // Changed 'contract' to 'win'
+  const [detailSearch, setDetailSearch] = useState(""); // 개찰 상세 검색어 상태
 
   // Search State
   const [keyword, setKeyword] = useState("");
@@ -17,10 +18,7 @@ export default function Home() {
   const [bidType, setBidType] = useState("전체"); // 용역/물품/공사
 
   // History Mock State
-  const [history, setHistory] = useState([
-    { id: 1, keyword: '시스템 구축', date: '1개월', type: '용역' },
-    { id: 2, keyword: 'PC 구매', date: '1주일', type: '물품' },
-  ]);
+  const [history, setHistory] = useState<any[]>([]);
 
   // Result State
   const [bidList, setBidList] = useState<any[]>([]); // Use any[] for mixed types (Bid/Win/Contract)
@@ -36,6 +34,7 @@ export default function Home() {
   useEffect(() => {
     if (activeTab === 'result' && selectedBid) {
       setLoadingParticipants(true);
+      setDetailSearch(""); // 상세 검색어 초기화
       // Use bidNtceOrd if available, otherwise '000'
       const ord = selectedBid.bidNtceOrd || '000';
       fetchOpeningResults(selectedBid.bidNtceNo, ord)
@@ -50,6 +49,7 @@ export default function Home() {
         });
     } else {
       setBidParticipants([]);
+      setDetailSearch("");
     }
   }, [selectedBid, activeTab]);
 
@@ -157,7 +157,7 @@ export default function Home() {
     // Different Layout for 'Result' (WinList)
     if (isResult) {
       return (
-        <div className="max-w-[1000px] mx-auto px-4 py-4 animate-in fade-in slide-in-from-right-4 duration-300">
+        <div className="w-[800px] mx-auto px-4 py-4 animate-in fade-in slide-in-from-right-4 duration-300">
           {/* Header & Back Button */}
           <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-3">
             <h2 className="text-xl font-black text-black">개찰결과</h2>
@@ -178,14 +178,12 @@ export default function Home() {
 
             <div className="border-t-2 border-blue-600 border-b border-gray-300 text-xs">
               {/* Row 1 */}
-              <div className="grid grid-cols-[120px_1fr_120px_1fr_120px_1fr] border-b border-gray-200">
+              <div className="grid grid-cols-[120px_1fr_120px_1fr] border-b border-gray-200">
                 <div className="bg-gray-50 p-2 font-bold flex items-center">입찰공고번호</div>
                 <div className="p-2 text-blue-600 font-bold flex items-center">
                   {selectedBid.bidNtceNo}
                   {selectedBid.bidNtceOrd && `- ${selectedBid.bidNtceOrd} `}
                 </div>
-                <div className="bg-gray-50 p-2 font-bold flex items-center">참조번호</div>
-                <div className="p-2 flex items-center">{selectedBid.refNo || selectedBid.rbidNo || '-'}</div>
                 <div className="bg-gray-50 p-2 font-bold flex items-center">실제개찰일시</div>
                 <div className="p-2 flex items-center">{selectedBid.opengDt || selectedBid.rlOpengDt || '-'}</div>
               </div>
@@ -197,17 +195,15 @@ export default function Home() {
               </div>
 
               {/* Row 3 */}
-              <div className="grid grid-cols-[120px_1fr_120px_1fr_120px_1fr] border-b border-gray-200">
+              <div className="grid grid-cols-[120px_1fr_120px_1fr] border-b border-gray-200">
                 <div className="bg-gray-50 p-2 font-bold flex items-center">공고기관</div>
                 <div className="p-2 flex items-center">{selectedBid.ntceInsttNm}</div>
                 <div className="bg-gray-50 p-2 font-bold flex items-center">수요기관</div>
                 <div className="p-2 flex items-center">{selectedBid.dminsttNm}</div>
-                <div className="bg-gray-50 p-2 font-bold flex items-center">적격심사결과</div>
-                <div className="p-2 flex items-center"></div>
               </div>
 
               {/* Row 4 */}
-              <div className="grid grid-cols-[120px_1fr_120px_1fr_120px_1fr] border-b border-gray-200">
+              <div className="grid grid-cols-[120px_1fr_120px_1fr] border-b border-gray-200">
                 <div className="bg-gray-50 p-2 font-bold flex items-center">집행관</div>
                 <div className="p-2 flex items-center">{selectedBid.ntceInsttOfclNm || '-'}</div>
                 <div className="bg-gray-50 p-2 font-bold flex items-center">복수예비가격<br />및 예정가격</div>
@@ -216,8 +212,6 @@ export default function Home() {
                     🔗 보기
                   </button>
                 </div>
-                <div className="bg-gray-50 p-2 font-bold flex items-center">공고담당자</div>
-                <div className="p-2 flex items-center">{selectedBid.ntceInsttOfclNm || '-'}</div>
               </div>
 
             </div>
@@ -235,9 +229,14 @@ export default function Home() {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold">사업자등록번호 :</span>
-                <input type="text" className="border border-gray-300 px-2 py-1 rounded w-32 text-xs" disabled />
-                <button className="bg-white border border-gray-300 px-3 py-1 rounded text-xs hover:bg-gray-50">적용</button>
+                <span className="text-xs font-bold">업체명 :</span>
+                <input
+                  type="text"
+                  value={detailSearch}
+                  onChange={(e) => setDetailSearch(e.target.value)}
+                  placeholder="업체명 검색"
+                  className="border border-gray-300 px-2 py-1 rounded w-32 text-xs"
+                />
               </div>
             </div>
 
@@ -258,19 +257,21 @@ export default function Home() {
                   {loadingParticipants ? (
                     <tr><td colSpan={7} className="py-10 text-center text-gray-500">데이터를 불러오는 중입니다...</td></tr>
                   ) : bidParticipants.length > 0 ? (
-                    bidParticipants.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-200 hover:bg-blue-50 text-gray-800 transition-colors">
-                        <td className="py-2 px-1 font-bold text-gray-600">{item.opengRank}</td>
-                        <td className="py-2 px-2 text-gray-600 font-mono">{item.prcbdrBizno}</td>
-                        <td className="py-2 px-2 text-left pl-4 font-bold text-black truncate" title={item.prcbdrNm}>{item.prcbdrNm}</td>
-                        <td className="py-2 px-2 text-gray-600">{item.prcbdrCeoNm}</td>
-                        <td className="py-2 px-2 text-right pr-4 font-mono font-bold text-blue-800">
-                          {item.bidprcAmt ? Number(item.bidprcAmt).toLocaleString() : '-'}
-                        </td>
-                        <td className="py-2 px-2 text-gray-600 font-mono">{item.bidprcrt}%</td>
-                        <td className="py-2 px-2 text-red-600 font-bold">{item.rmrk || (item.opengRank === '1' ? '낙찰' : '정상')}</td>
-                      </tr>
-                    ))
+                    bidParticipants
+                      .filter(item => !detailSearch || (item.prcbdrNm && item.prcbdrNm.includes(detailSearch)))
+                      .map((item, idx) => (
+                        <tr key={idx} className="border-b border-gray-200 hover:bg-blue-50 text-gray-800 transition-colors">
+                          <td className="py-2 px-1 font-bold text-gray-600">{item.opengRank}</td>
+                          <td className="py-2 px-2 text-gray-600 font-mono">{item.prcbdrBizno}</td>
+                          <td className="py-2 px-2 text-left pl-4 font-bold text-black truncate" title={item.prcbdrNm}>{item.prcbdrNm}</td>
+                          <td className="py-2 px-2 text-gray-600">{item.prcbdrCeoNm}</td>
+                          <td className="py-2 px-2 text-right pr-4 font-mono font-bold text-blue-800">
+                            {item.bidprcAmt ? Number(item.bidprcAmt).toLocaleString() : '-'}
+                          </td>
+                          <td className="py-2 px-2 text-gray-600 font-mono">{item.bidprcrt}%</td>
+                          <td className="py-2 px-2 text-red-600 font-bold">{item.rmrk || (item.opengRank === '1' ? '낙찰' : '정상')}</td>
+                        </tr>
+                      ))
                   ) : (selectedBid.bidwinrNm || selectedBid.opengCorpInfo) ? (
                     (() => {
                       // Parse opengCorpInfo: Name^BizNo^Ceo^Amt^Rate
@@ -317,7 +318,7 @@ export default function Home() {
       const agency = selectedBid.dminsttNm;
 
       return (
-        <div className="max-w-[800px] mx-auto px-4 py-4 animate-in fade-in slide-in-from-right-4 duration-300">
+        <div className="w-[800px] mx-auto px-4 py-4 animate-in fade-in slide-in-from-right-4 duration-300">
           {/* Detail Header */}
           <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-3">
             <h2 className="text-xl font-black text-black">낙찰결과 상세</h2>
@@ -430,7 +431,7 @@ export default function Home() {
     const amountValue = selectedBid.presmptPrce;
 
     return (
-      <div className="max-w-[800px] mx-auto px-4 py-4 animate-in fade-in slide-in-from-right-4 duration-300">
+      <div className="w-[800px] mx-auto px-4 py-4 animate-in fade-in slide-in-from-right-4 duration-300">
         {/* Detail Header (Revised as requested) */}
         <div className="flex items-center justify-between mb-4 border-b-2 border-black pb-3">
           <h2 className="text-xl font-black text-black">입찰공고</h2>
@@ -612,7 +613,7 @@ export default function Home() {
   if (selectedBid) {
     return (
       <main className="min-h-screen bg-white text-black font-sans text-xs flex flex-col items-center">
-        <div className="w-full max-w-[800px]">
+        <div className="w-full w-[800px]">
           {renderDetailView()}
         </div>
       </main>
@@ -625,7 +626,7 @@ export default function Home() {
 
       {/* Header / Tabs */}
       <header className="border-b border-black sticky top-0 bg-white z-10 shadow-sm">
-        <div className="max-w-[800px] mx-auto px-4 flex items-center justify-between h-12">
+        <div className="w-[800px] mx-auto px-4 flex items-center justify-between h-12">
           <h1 className="text-sm font-black">나라장터 검색기</h1>
           <nav className="flex h-full items-end">
             {[
@@ -649,7 +650,7 @@ export default function Home() {
       </header>
 
       {/* Body */}
-      <div className="max-w-[800px] mx-auto px-4 py-4">
+      <div className="w-[800px] mx-auto px-4 py-4">
 
         {/* Search Panel */}
         <div className="bg-gray-50 border border-black p-4 rounded-lg mb-4 shadow-sm">
