@@ -1,3 +1,4 @@
+import axios from 'axios';
 
 // 개찰결과 투찰 업체 리스트 조회 (순위 포함)
 export const fetchOpeningResults = async (bidNtceNo: string, bidNtceOrd: string = '000', serviceKey?: string): Promise<any[]> => {
