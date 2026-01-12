@@ -567,8 +567,8 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-2">
             {Array.from({ length: 10 }).map((_, i) => {
               const index = i + 1;
-              const fileName = selectedBid[`ntceSpecFileNm${index} `];
-              const fileUrl = selectedBid[`ntceSpecDocUrl${index} `];
+              const fileName = selectedBid[`ntceSpecFileNm${index}`];
+              const fileUrl = selectedBid[`ntceSpecDocUrl${index}`];
 
               if (!fileName || !fileUrl) return null;
 
@@ -627,7 +627,7 @@ export default function Home() {
       {/* Header / Tabs */}
       <header className="border-b border-black sticky top-0 bg-white z-10 shadow-sm">
         <div className="w-[800px] mx-auto px-4 flex items-center justify-between h-12">
-          <h1 className="text-sm font-black">나라장터 검색기</h1>
+          <h1 className="text-sm font-black">나라장터 검색기 <span className="text-[10px] font-normal text-gray-500">(260112:0938)</span></h1>
           <nav className="flex h-full items-end">
             {[
               { id: 'bid', label: '📢 입찰공고' },
